@@ -1,5 +1,6 @@
 package com.charlyghislain.keycloak.importexport;
 
+import org.jboss.resteasy.annotations.Query;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.keycloak.common.ClientConnection;
 import org.keycloak.credential.CredentialModel;
@@ -40,6 +41,7 @@ import javax.ws.rs.OPTIONS;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -49,6 +51,7 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -88,21 +91,24 @@ public class KeycloakImportExportRestResourceProvider implements RealmResourcePr
     @GET
     @Path("realm")
     @Produces(MediaType.APPLICATION_JSON)
-    public RealmRepresentation exportRealm(@Context final HttpHeaders headers, @Context final UriInfo uriInfo) {
+    public RealmRepresentation exportRealm(@Context final HttpHeaders headers, @Context final UriInfo uriInfo,
+                                           @QueryParam("users") Boolean includeUsers) {
         // This fixes double slashes
         UriInfo keycloakUriInfo = new KeycloakUriInfo(session, UrlType.BACKEND, uriInfo);
         //retrieving the realm should be done before authentication
         // authentication overrides the value with master inside the context
         // this is done this way to avoid changing the copied code below (authenticateRealmAdminRequest)
         RealmModel realm = session.getContext().getRealm();
-    AdminAuth adminAuth = authenticateRealmAdminRequest(headers, keycloakUriInfo);
+        AdminAuth adminAuth = authenticateRealmAdminRequest(headers, keycloakUriInfo);
         RealmManager realmManager = new RealmManager(session);
         RoleModel roleModel = adminAuth.getRealm().getRole(AdminRoles.ADMIN);
         AdminPermissionEvaluator realmAuth = AdminPermissions.evaluator(session, realm, adminAuth);
         if (roleModel != null && adminAuth.getUser().hasRole(roleModel)
                 && adminAuth.getRealm().equals(realmManager.getKeycloakAdminstrationRealm())
                 && realmAuth.realm().canManageRealm()) {
-            RealmRepresentation realmRep = ExportUtils.exportRealm(session, realm, true, true);
+            boolean includeUsersValue = Optional.ofNullable(includeUsers)
+                    .orElse(false);
+            RealmRepresentation realmRep = ExportUtils.exportRealm(session, realm, includeUsersValue, true);
             //correct users
             if (realmRep.getUsers() != null) {
                 setCorrectCredentials(realmRep.getUsers(), realm);
