@@ -13,6 +13,11 @@
     </modules>
     <packaging>pom</packaging>
 
+    <name>${project.groupId}:${project.artifactId}</name>
+    <description>Keycloak export rest resource</description>
+    <url>https://github.com/cghislai/keycloak-importexport</url>
+
+
     <properties>
         <keycloak.version>11.0.2</keycloak.version>
         <!-- To be set by other plugins -->
