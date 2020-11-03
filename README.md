@@ -2,15 +2,15 @@
 
 Creates a rest resource to export realms.
 
-Stole from https://github.com/cloudtrust/keycloak-export.
+Stolen from https://github.com/cloudtrust/keycloak-export.
 
 
 ## Getting started
 
-- Deploy the ear (com.charlyghislain.keycloak:keycloak-importexport-ear:ear)
+- Deploy the ear (com.charlyghislain.keycloak:keycloak-importexport-ear:ear, see https://repo1.maven.org/maven2/com/charlyghislain/keycloak/keycloak-importexport-ear/)
   into your keycloak installation (/opt/jboss/keycloak/standalone/deployments).
 
-- Obtain a token for the admin realm:
+- Obtain an admin token for the master realm:
 ```
  curl -k  -d "client_id=admin-cli" \
    -d "username=admin" \
@@ -20,9 +20,12 @@ Stole from https://github.com/cloudtrust/keycloak-export.
 ```
 
 
-- Export any realm using that token for authentication:
+- Export any realm using that token:
 ```
 curl -k -H 'accept: application/json' \
  -H 'authorization: bearer <access_token>' \
+ -H 'accept: application/json' \
  "<keycloak-url>/realms/<realm>/importexport/realm" 
 ```
+
+- To include users, pass the query param `?users=true`
