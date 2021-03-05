@@ -29,3 +29,8 @@ curl -k -H 'accept: application/json' \
 ```
 
 - To include users, pass the query param `?users=true`
+
+## Troubleshouting
+
+- If you use another url than the public one, you may need to override the
+  `Host` header in order for keycloak to match its token `issuer`.
