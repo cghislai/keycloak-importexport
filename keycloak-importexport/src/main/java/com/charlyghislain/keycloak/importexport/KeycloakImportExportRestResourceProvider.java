@@ -91,15 +91,10 @@ public class KeycloakImportExportRestResourceProvider implements RealmResourcePr
     @GET
     @Path("realm")
     @Produces(MediaType.APPLICATION_JSON)
-    public RealmRepresentation exportRealm(@Context final HttpHeaders headers, @Context final UriInfo uriInfo,
+    public RealmRepresentation exportRealm(@Context final HttpHeaders headers,
                                            @QueryParam("users") Boolean includeUsers) {
-        // This fixes double slashes
-        UriInfo keycloakUriInfo = new KeycloakUriInfo(session, UrlType.BACKEND, uriInfo);
-        //retrieving the realm should be done before authentication
-        // authentication overrides the value with master inside the context
-        // this is done this way to avoid changing the copied code below (authenticateRealmAdminRequest)
         RealmModel realm = session.getContext().getRealm();
-        AdminAuth adminAuth = authenticateRealmAdminRequest(headers, keycloakUriInfo);
+        AdminAuth adminAuth = authenticateRealmAdminRequest(headers);
         RealmManager realmManager = new RealmManager(session);
         RoleModel roleModel = adminAuth.getRealm().getRole(AdminRoles.ADMIN);
         AdminPermissionEvaluator realmAuth = AdminPermissions.evaluator(session, realm, adminAuth);
@@ -164,15 +159,15 @@ public class KeycloakImportExportRestResourceProvider implements RealmResourcePr
      * it allows to check if a user as realm/master admin
      * at each upgrade check that it hasn't been modified
      */
-    private AdminAuth authenticateRealmAdminRequest(HttpHeaders headers, UriInfo uriInfo) {
-        String tokenString = authManager.extractAuthorizationHeaderToken(headers);
+    protected AdminAuth authenticateRealmAdminRequest(HttpHeaders headers) {
+        String tokenString = AppAuthManager.extractAuthorizationHeaderToken(headers);
         if (tokenString == null) throw new NotAuthorizedException("Bearer");
         AccessToken token;
         try {
             JWSInput input = new JWSInput(tokenString);
             token = input.readJsonContent(AccessToken.class);
         } catch (JWSInputException e) {
-            throw new NotAuthorizedException("Bearer token format error", e);
+            throw new NotAuthorizedException("Bearer token format error");
         }
         String realmName = token.getIssuer().substring(token.getIssuer().lastIndexOf('/') + 1);
         RealmManager realmManager = new RealmManager(session);
@@ -181,7 +176,13 @@ public class KeycloakImportExportRestResourceProvider implements RealmResourcePr
             throw new NotAuthorizedException("Unknown realm in token");
         }
         session.getContext().setRealm(realm);
-        AuthenticationManager.AuthResult authResult = authManager.authenticateBearerToken(session, realm, uriInfo, clientConnection, headers);
+
+        AuthenticationManager.AuthResult authResult = new AppAuthManager.BearerTokenAuthenticator(session)
+                .setRealm(realm)
+                .setConnection(clientConnection)
+                .setHeaders(headers)
+                .authenticate();
+
         if (authResult == null) {
             logger.fine("Token not valid");
             throw new NotAuthorizedException("Bearer");
@@ -199,10 +200,10 @@ public class KeycloakImportExportRestResourceProvider implements RealmResourcePr
     @POST
     @Path("realm")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response importRealm(@Context final HttpHeaders headers, @Context final UriInfo uriInfo, @Context KeycloakApplication keycloak,
+    public Response importRealm(@Context final HttpHeaders headers, @Context KeycloakApplication keycloak,
                                 RealmRepresentation rep) {
         try {
-            AdminAuth auth = authenticateRealmAdminRequest(headers, uriInfo);
+            AdminAuth auth = authenticateRealmAdminRequest(headers);
             AdminPermissions.realms(session, auth).requireCreateRealm();
 
             RealmModel realm = ImportExportUtils.importRealm(session, keycloak, rep, null, false);

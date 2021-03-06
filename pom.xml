@@ -6,7 +6,7 @@
 
     <groupId>com.charlyghislain.keycloak</groupId>
     <artifactId>keycloak-import-export-rest</artifactId>
-    <version>11.2.0-SNAPSHOT</version>
+    <version>12.0.0-SNAPSHOT</version>
     <modules>
         <module>keycloak-importexport</module>
         <module>keycloak-importexport-ear</module>
@@ -19,7 +19,7 @@
 
 
     <properties>
-        <keycloak.version>11.0.2</keycloak.version>
+        <keycloak.version>12.0.4</keycloak.version>
         <!-- To be set by other plugins -->
         <!--suppress UnresolvedMavenProperty -->
         <annotatedJdk>${org.checkerframework:jdk8:jar}</annotatedJdk>
