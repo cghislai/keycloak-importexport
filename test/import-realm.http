@@ -6,5 +6,5 @@ Authorization: Bearer {{admin-token}}
 < ./realm.json
 
 > {%
- client.assert(response.status === 200);
+ client.assert(response.status === 200 || response.status === 201);
  %}
