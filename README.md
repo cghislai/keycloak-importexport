@@ -16,7 +16,7 @@ Stolen from https://github.com/cloudtrust/keycloak-export.
    -d "username=admin" \
    -d "password=XXXX" \
    -d "grant_type=password" \
-   "<keycloak-url>/realms/master/protocol/openid-connect/token" | jq '.access_token'
+   "<keycloak-url>/realms/master/protocol/openid-connect/token" | jq -r '.access_token'
 ```
 
 
@@ -25,7 +25,7 @@ Stolen from https://github.com/cloudtrust/keycloak-export.
 curl -k -H 'accept: application/json' \
  -H 'authorization: bearer <access_token>' \
  -H 'accept: application/json' \
- "<keycloak-url>/realms/<realm>/importexport/realm" 
+   "<keycloak-url>/realms/<realm>/importexport/realm" 
 ```
 
 - To include users, pass the query param `?users=true`

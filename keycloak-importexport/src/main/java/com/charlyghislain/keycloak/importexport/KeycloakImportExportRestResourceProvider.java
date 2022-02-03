@@ -4,6 +4,7 @@ import org.jboss.resteasy.annotations.Query;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.keycloak.common.ClientConnection;
 import org.keycloak.credential.CredentialModel;
+import org.keycloak.exportimport.Strategy;
 import org.keycloak.exportimport.util.ExportUtils;
 import org.keycloak.jose.jws.JWSInput;
 import org.keycloak.jose.jws.JWSInputException;
@@ -48,6 +49,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -201,12 +203,22 @@ public class KeycloakImportExportRestResourceProvider implements RealmResourcePr
     @Path("realm")
     @Produces(MediaType.APPLICATION_JSON)
     public Response importRealm(@Context final HttpHeaders headers, @Context KeycloakApplication keycloak,
+                                @QueryParam("strategy") String strategyParam,
+                                @QueryParam("skipUserDependant") Boolean skipUserDependantparam,
                                 RealmRepresentation rep) {
         try {
+            Strategy overwriteStragegy = Optional.ofNullable(strategyParam)
+                    .flatMap(strategy -> Arrays.stream(Strategy.values())
+                            .filter(s -> s.name().equalsIgnoreCase(strategy))
+                            .findAny())
+                    .orElse(Strategy.OVERWRITE_EXISTING);
+            boolean skipUsersDependants = Optional.ofNullable(skipUserDependantparam)
+                    .orElse(false);
+
             AdminAuth auth = authenticateRealmAdminRequest(headers);
             AdminPermissions.realms(session, auth).requireCreateRealm();
 
-            RealmModel realm = ImportExportUtils.importRealm(session, keycloak, rep, null, false);
+            RealmModel realm = ImportExportUtils.importRealm(session, keycloak, rep, overwriteStragegy, skipUsersDependants);
             grantPermissionsToRealmCreator(auth, realm);
 
             URI location = AdminRoot.realmsUrl(session.getContext().getUri()).path(realm.getName()).build();
