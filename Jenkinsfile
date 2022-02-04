@@ -41,8 +41,8 @@ pipeline {
                     }
                 }
                 withCredentials([file(credentialsId: "${params.GPG_KEY_CREDENTIAL_ID}", variable: 'GPGKEY')]) {
-                    sh 'gpg --allow-secret-key-import --import $GPGKEY'
-                    sh "echo \"${params.GPG_KEY_FINGERPRINT}:6:\" | gpg --import-ownertrust"
+                    sh 'gpg --batch --allow-secret-key-import --import $GPGKEY'
+                    sh "echo \"${params.GPG_KEY_FINGERPRINT}:6:\" | gpg --batch --import-ownertrust"
                 }
                 withMaven(maven: 'maven', mavenSettingsConfig: 'ossrh-settings-xml', jdk: 'jdk11') {
                     sh "mvn deploy $MVN_ARGS"
