@@ -2,7 +2,6 @@ pipeline {
     agent any
     parameters {
         booleanParam(name: 'SKIP_TESTS', defaultValue: false, description: 'Skip tests')
-        booleanParam(name: 'NPM_DEPLOY', defaultValue: false, description: 'NPM deployment')
         string(name: 'ALT_DEPLOYMENT_REPOSITORY', defaultValue: '', description: 'Alternative deployment repo')
         string(name: 'MVN_ARGS', defaultValue: '', description: 'Additional maven args')
     }
@@ -28,17 +27,16 @@ pipeline {
             steps {
                 script {
                     env.MVN_ARGS=params.MVN_ARGS
-                    env.NPM_DEPLOY=params.NPM_DEPLOY
+                    env.MVN_ARGS="${env.MVN_ARGS} -DskipTests=true -Possrh-deploy"
+
                     if (params.ALT_DEPLOYMENT_REPOSITORY != '') {
                         env.MVN_ARGS="${env.MVN_ARGS} -DaltDeploymentRepository=${params.ALT_DEPLOYMENT_REPOSITORY}"
                     }
                     if (env.BRANCH_NAME == 'master') {
-                        env.MVN_ARGS="${env.MVN_ARGS} -Possrh-deploy"
-                        env.NPM_DEPLOY="true"
+                        env.MVN_ARGS="${env.MVN_ARGS} "
                     }
                 }
-                withMaven(maven: 'maven', mavenSettingsConfig: 'nexus-mvn-settings',
-                          mavenOpts: '-DskipTests=true') {
+                withMaven(maven: 'maven', mavenSettingsConfig: 'ossrh-settings-xml', jdk: 'jdk11') {
                     sh "mvn deploy $MVN_ARGS"
                 }
             }
