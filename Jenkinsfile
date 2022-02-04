@@ -5,6 +5,10 @@ pipeline {
         booleanParam(name: 'NPM_DEPLOY', defaultValue: false, description: 'NPM deployment')
         string(name: 'ALT_DEPLOYMENT_REPOSITORY', defaultValue: '', description: 'Alternative deployment repo')
         string(name: 'MVN_ARGS', defaultValue: '', description: 'Additional maven args')
+        string(name: 'GPG_KEY_CREDENTIAL_ID', defaultValue: 'jenkins-jenkins-valuya-maven-deploy-gpg-key',
+                 description: 'Credential containing the private gpg key (pem)')
+        string(name: 'GPG_KEY_FINGERPRINT', defaultValue: '98547E57F1690E2901E74CAB04EBAAA5BAB4A4DF',
+         description: 'The fingerprint of this key to add to trust root')
     }
     options {
         disableConcurrentBuilds()
