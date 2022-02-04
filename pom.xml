@@ -20,9 +20,7 @@
 
     <properties>
         <keycloak.version>16.1.0</keycloak.version>
-        <!-- To be set by other plugins -->
-        <!--suppress UnresolvedMavenProperty -->
-        <annotatedJdk>${org.checkerframework:jdk8:jar}</annotatedJdk>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <distributionManagement>
