@@ -155,8 +155,12 @@
                                 <goal>sign</goal>
                             </goals>
                             <configuration>
+                                <gpgArguments>
+                                    <arg>--pinentry-mode</arg>
+                                    <arg>loopback</arg>
+                                    <arg>--batch</arg>
+                                </gpgArguments>
                                 <interactive>false</interactive>
-                                <gpgArguments>--batch</gpgArguments>
                             </configuration>
                         </execution>
                     </executions>
