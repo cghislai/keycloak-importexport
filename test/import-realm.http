@@ -1,0 +1,10 @@
+POST {{keycloak-url}}/realms/master/importexport/realm
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{admin-token}}
+
+< ./realm.json
+
+> {%
+ client.assert(response.status === 200 || response.status === 201);
+ %}

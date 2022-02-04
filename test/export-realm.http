@@ -1,0 +1,7 @@
+GET {{keycloak-url}}/realms/ezaeza/importexport/realm?users=true
+Accept: application/json
+Authorization: Bearer {{admin-token}}
+
+> {%
+ client.assert(response.status === 200);
+ %}
