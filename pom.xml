@@ -6,7 +6,7 @@
 
     <groupId>com.charlyghislain.keycloak</groupId>
     <artifactId>keycloak-import-export-rest</artifactId>
-    <version>16.0.0</version>
+    <version>16.0.1-SNAPSHOT</version>
     <modules>
         <module>keycloak-importexport</module>
         <module>keycloak-importexport-ear</module>
