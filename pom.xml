@@ -6,10 +6,9 @@
 
     <groupId>com.charlyghislain.keycloak</groupId>
     <artifactId>keycloak-import-export-rest</artifactId>
-    <version>16.0.0</version>
+    <version>19.0.0-SNAPSHOT</version>
     <modules>
         <module>keycloak-importexport</module>
-        <module>keycloak-importexport-ear</module>
     </modules>
     <packaging>pom</packaging>
 
@@ -17,9 +16,8 @@
     <description>Keycloak export rest resource</description>
     <url>https://github.com/cghislai/keycloak-importexport</url>
 
-
     <properties>
-        <keycloak.version>16.1.0</keycloak.version>
+        <keycloak.version>19.0.1</keycloak.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
