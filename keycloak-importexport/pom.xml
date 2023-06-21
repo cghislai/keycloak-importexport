@@ -45,7 +45,11 @@
             <artifactId>keycloak-services</artifactId>
             <scope>provided</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-model-legacy-private</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
 </project>
