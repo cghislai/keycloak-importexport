@@ -1,21 +1,13 @@
 package com.charlyghislain.keycloak.importexport;
 
-import org.jboss.resteasy.annotations.Query;
-import org.jboss.resteasy.spi.HttpRequest;
 import org.keycloak.common.ClientConnection;
 import org.keycloak.credential.CredentialModel;
 import org.keycloak.exportimport.Strategy;
 import org.keycloak.exportimport.util.ExportUtils;
+import org.keycloak.http.HttpRequest;
 import org.keycloak.jose.jws.JWSInput;
 import org.keycloak.jose.jws.JWSInputException;
-import org.keycloak.models.AdminRoles;
-import org.keycloak.models.ClientModel;
-import org.keycloak.models.KeycloakSession;
-import org.keycloak.models.KeycloakUriInfo;
-import org.keycloak.models.ModelDuplicateException;
-import org.keycloak.models.RealmModel;
-import org.keycloak.models.RoleModel;
-import org.keycloak.models.UserModel;
+import org.keycloak.models.*;
 import org.keycloak.policy.PasswordPolicyNotMetException;
 import org.keycloak.representations.AccessToken;
 import org.keycloak.representations.idm.CredentialRepresentation;
@@ -32,28 +24,14 @@ import org.keycloak.services.resources.admin.AdminAuth;
 import org.keycloak.services.resources.admin.AdminRoot;
 import org.keycloak.services.resources.admin.permissions.AdminPermissionEvaluator;
 import org.keycloak.services.resources.admin.permissions.AdminPermissions;
-import org.keycloak.urls.UrlType;
 
-import javax.ws.rs.ForbiddenException;
-import javax.ws.rs.GET;
-import javax.ws.rs.NotAuthorizedException;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.OPTIONS;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 import java.net.URI;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -129,15 +107,17 @@ public class KeycloakImportExportRestResourceProvider implements RealmResourcePr
             userRepMap.put(userRep.getId(), userRep);
         }
 
-        for (UserModel user : session.users().getUsers(realm, true)) {
-            UserRepresentation userRep = userRepMap.get(user.getId());
-            if (userRep != null) {
-                // Credentials
-                List<CredentialModel> creds = session.userCredentialManager().getStoredCredentials(realm, user);
-                List<CredentialRepresentation> credReps = creds.stream().map(this::exportCredential).collect(Collectors.toList());
-                userRep.setCredentials(credReps);
-            }
-        }
+        session.users().getUsersStream(realm, true)
+                .forEach(user -> {
+                    UserRepresentation userRep = userRepMap.get(user.getId());
+                    if (userRep != null) {
+                        // Credentials
+                        List<CredentialRepresentation> credReps = session.userCredentialManager().getStoredCredentialsStream(realm, user)
+                                .map(this::exportCredential)
+                                .collect(Collectors.toList());
+                        userRep.setCredentials(credReps);
+                    }
+                });
     }
 
     private CredentialRepresentation exportCredential(CredentialModel userCred) {

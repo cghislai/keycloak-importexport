@@ -48,9 +48,8 @@ public class ImportExportUtils {
                 logger.log(Level.WARNING, "Realm {0} already exists. Removing it before import", realmName);
                 if (Config.getAdminRealm().equals(realm.getId())) {
                     // Delete all masterAdmin apps due to foreign key constraints
-                    for (RealmModel currRealm : model.getRealms()) {
-                        currRealm.setMasterAdminClient(null);
-                    }
+                    model.getRealmsStream()
+                            .forEach(r -> r.setMasterAdminClient(null));
                 }
                 model.removeRealm(realm.getId());
             }
@@ -64,7 +63,7 @@ public class ImportExportUtils {
         // Now set required actions
         for (Map.Entry<UserRepresentation, List<String>> entry : mapUserToRequiredActions.entrySet()) {
             UserRepresentation userRep = entry.getKey();
-            UserModel user = session.userLocalStorage().getUserById(userRep.getId(), realm);
+            UserModel user = session.userLocalStorage().getUserById(realm, userRep.getId());
             entry.getValue().forEach(user::addRequiredAction);
         }
 

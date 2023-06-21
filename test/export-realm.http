@@ -1,4 +1,4 @@
-GET {{keycloak-url}}/realms/ezaeza/importexport/realm?users=true
+GET {{keycloak-url}}/realms/test/importexport/realm?users=true
 Accept: application/json
 Authorization: Bearer {{admin-token}}
 
