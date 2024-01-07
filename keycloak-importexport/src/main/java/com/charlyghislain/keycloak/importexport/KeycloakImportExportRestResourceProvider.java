@@ -1,7 +1,11 @@
 package com.charlyghislain.keycloak.importexport;
 
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import org.keycloak.common.ClientConnection;
-import org.keycloak.credential.CredentialModel;
 import org.keycloak.exportimport.Strategy;
 import org.keycloak.exportimport.util.ExportUtils;
 import org.keycloak.http.HttpRequest;
@@ -10,9 +14,7 @@ import org.keycloak.jose.jws.JWSInputException;
 import org.keycloak.models.*;
 import org.keycloak.policy.PasswordPolicyNotMetException;
 import org.keycloak.representations.AccessToken;
-import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
-import org.keycloak.representations.idm.UserRepresentation;
 import org.keycloak.services.ErrorResponse;
 import org.keycloak.services.managers.AppAuthManager;
 import org.keycloak.services.managers.AuthenticationManager;
@@ -25,16 +27,11 @@ import org.keycloak.services.resources.admin.AdminRoot;
 import org.keycloak.services.resources.admin.permissions.AdminPermissionEvaluator;
 import org.keycloak.services.resources.admin.permissions.AdminPermissions;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.net.URI;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 public class KeycloakImportExportRestResourceProvider implements RealmResourceProvider {
 
@@ -84,52 +81,12 @@ public class KeycloakImportExportRestResourceProvider implements RealmResourcePr
             boolean includeUsersValue = Optional.ofNullable(includeUsers)
                     .orElse(false);
             RealmRepresentation realmRep = ExportUtils.exportRealm(session, realm, includeUsersValue, true);
-            //correct users
-            if (realmRep.getUsers() != null) {
-                setCorrectCredentials(realmRep.getUsers(), realm);
-            }
             return realmRep;
         } else {
             throw new ForbiddenException();
         }
     }
 
-    /**
-     * This method rewrites the credential list for the users, including the Id (which is missing by default).
-     * Unfortunately, due to the limitations in the keycloak API, there is no way to unit test this.
-     *
-     * @param users The user representations to correct
-     * @param realm the realm being exported
-     */
-    private void setCorrectCredentials(List<UserRepresentation> users, RealmModel realm) {
-        Map<String, UserRepresentation> userRepMap = new HashMap<>(users.size());
-        for (UserRepresentation userRep : users) {
-            userRepMap.put(userRep.getId(), userRep);
-        }
-
-        session.users().getUsersStream(realm, true)
-                .forEach(user -> {
-                    UserRepresentation userRep = userRepMap.get(user.getId());
-                    if (userRep != null) {
-                        // Credentials
-                        List<CredentialRepresentation> credReps = session.userCredentialManager().getStoredCredentialsStream(realm, user)
-                                .map(this::exportCredential)
-                                .collect(Collectors.toList());
-                        userRep.setCredentials(credReps);
-                    }
-                });
-    }
-
-    private CredentialRepresentation exportCredential(CredentialModel userCred) {
-        CredentialRepresentation credRep = new CredentialRepresentation();
-        credRep.setId(userCred.getId());
-        credRep.setType(userCred.getType());
-        credRep.setCreatedDate(userCred.getCreatedDate());
-        credRep.setCredentialData(userCred.getCredentialData());
-        credRep.setSecretData(userCred.getSecretData());
-        credRep.setUserLabel(userCred.getUserLabel());
-        return credRep;
-    }
 
     @Override
     public void close() {
@@ -207,11 +164,11 @@ public class KeycloakImportExportRestResourceProvider implements RealmResourcePr
             return Response.created(location).build();
         } catch (ModelDuplicateException e) {
             logger.log(Level.SEVERE, "Conflict detected", e);
-            return ErrorResponse.exists("Conflict detected. See logs for details");
+            throw ErrorResponse.exists("Conflict detected. See logs for details");
         } catch (PasswordPolicyNotMetException e) {
             logger.log(Level.SEVERE, "Password policy not met for user " + e.getUsername(), e);
             if (session.getTransactionManager().isActive()) session.getTransactionManager().setRollbackOnly();
-            return ErrorResponse.error("Password policy not met. See logs for details", Response.Status.BAD_REQUEST);
+            throw ErrorResponse.error("Password policy not met. See logs for details", Response.Status.BAD_REQUEST);
         }
     }
 
